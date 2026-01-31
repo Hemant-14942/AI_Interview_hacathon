@@ -15,20 +15,34 @@ whisper_model = whisper.load_model("base")
 def extract_audio(video_path: str, audio_path: str):
     print("[Backend 🎤] VideoAnalysis: Video se audio nikal rahe hain – ffmpeg chal raha hai!", video_path[:80])
     logger.info("Extracting audio from video: %s", video_path)
+
+    if not os.path.isfile(video_path):
+        msg = f"Video file not found: {video_path}"
+        logger.error(msg)
+        raise FileNotFoundError(msg)
+    if os.path.getsize(video_path) == 0:
+        msg = f"Video file is empty: {video_path}"
+        logger.error(msg)
+        raise ValueError(msg)
+
     try:
         (
             ffmpeg
             .input(video_path)
             .output(audio_path, ac=1, ar=16000)
             .overwrite_output()
-            .run(quiet=True)
+            .run(capture_stdout=True, capture_stderr=True)
         )
         print("[Backend 🎤] VideoAnalysis: Audio nikal liya – WAV save ho gaya!")
         logger.info("Audio extracted successfully")
-    except Exception:
-        print("[Backend 🎤] VideoAnalysis: FFmpeg ne fail kiya – audio nahi nikal paya!")
-        logger.exception("Audio extraction failed")
-        raise
+    except Exception as e:
+        stderr = ""
+        if getattr(e, "stderr", None):
+            stderr = (e.stderr if isinstance(e.stderr, str) else (e.stderr or b"").decode("utf-8", errors="replace")).strip()
+        msg = f"ffmpeg error: {stderr or str(e)}"
+        print("[Backend 🎤] VideoAnalysis: FFmpeg ne fail kiya –", msg[:200])
+        logger.exception("Audio extraction failed: %s", msg[:500])
+        raise RuntimeError(msg) from e
 
 
 def transcribe_audio(audio_path: str) -> str:

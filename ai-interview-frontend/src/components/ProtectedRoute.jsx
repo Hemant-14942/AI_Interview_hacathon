@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children }) {
 
   if (!user) {
     debug.flow("ProtectedRoute – token nahi hai, login pe bhej rahe hain", { from: location.pathname });
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   debug.component("ProtectedRoute", "User logged in – protected content dikha rahe hain");

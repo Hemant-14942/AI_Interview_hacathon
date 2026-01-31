@@ -1,7 +1,7 @@
 from datetime import datetime
 from bson import ObjectId
 
-from app.core.database import db
+from app.core.database_sync import get_sync_db
 from app.core.logger import get_logger
 from app.services.video_analysis_service import (
     extract_audio,
@@ -38,7 +38,8 @@ def process_answer_pipeline(interview_id: str, question_id: str, video_path: str
         print("[Backend 🎤] BackgroundJob: Step 3 – DeepFace se emotion!")
         emotion, confidence = analyze_emotion(video_path)
 
-        # 4️⃣ Fetch question
+        # 4️⃣ Fetch question (sync DB – Motor returns Future in sync context)
+        db = get_sync_db()
         question = db.interview_questions.find_one(
             {"_id": ObjectId(question_id)}
         )
@@ -56,7 +57,7 @@ def process_answer_pipeline(interview_id: str, question_id: str, video_path: str
         )
         print("[Backend 🎤] BackgroundJob: Step 5 – GPT ne score de diya!")
 
-        # 6️⃣ Save everything
+        # 6️⃣ Save everything (sync DB)
         db.interview_answers.update_one(
             {
                 "session_id": interview_id,
@@ -87,6 +88,7 @@ def process_answer_pipeline(interview_id: str, question_id: str, video_path: str
         print("[Backend 🎤] BackgroundJob: Pipeline fail –", str(e), "– answer status = failed! Report mein ye question nahi aayega.")
         logger.exception("BG JOB FAILED")
 
+        db = get_sync_db()
         db.interview_answers.update_one(
             {
                 "session_id": interview_id,

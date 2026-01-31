@@ -31,8 +31,12 @@ async def get_interview_report(
     answers = await db.interview_answers.find({
         "session_id": interview_id
     }).to_list(length=100)
-    print("[Backend 🎤] Report: Session + answers mil gaye – count =", len(answers), "– ab report banayenge!")
 
-    report = generate_final_report(session, answers)
+    questions = await db.interview_questions.find(
+        {"session_id": interview_id}
+    ).sort("order", 1).to_list(length=100)
+    print("[Backend 🎤] Report: Session + answers + questions mil gaye – answers =", len(answers), "questions =", len(questions), "– ab report banayenge!")
+
+    report = generate_final_report(session, answers, questions)
     print("[Backend 🎤] Report: Report ready – decision/scores/summary – frontend ko bhej rahe hain!")
     return report

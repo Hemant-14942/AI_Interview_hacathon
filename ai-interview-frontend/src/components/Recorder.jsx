@@ -1,22 +1,38 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { motion } from "framer-motion";
 import debug from "../utils/debug";
 
-export default function Recorder({ onStop }) {
+const Recorder = forwardRef(function Recorder({ onStop, onStoppedAndReady }, ref) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState("");
+  const streamRef = useRef(null);
+  const onStopRef = useRef(onStop);
+  const onStoppedAndReadyRef = useRef(onStoppedAndReady);
+  onStopRef.current = onStop;
+  onStoppedAndReadyRef.current = onStoppedAndReady;
+
+  useImperativeHandle(ref, () => ({
+    stopAndGetBlob() {
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+        setRecording(false);
+        debug.action("Recorder", "Stop (parent ne trigger kiya)");
+      }
+    },
+  }), []);
 
   useEffect(() => {
     let stream = null;
+    let timeoutId = null;
     async function initCamera() {
       debug.component("Recorder", "Camera/mic access maang rahe hain");
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
         mediaRecorderRef.current = new MediaRecorder(stream);
         mediaRecorderRef.current.ondataavailable = (e) => {
           if (e.data.size) chunksRef.current.push(e.data);
@@ -24,10 +40,20 @@ export default function Recorder({ onStop }) {
         mediaRecorderRef.current.onstop = () => {
           const blob = new Blob(chunksRef.current, { type: "video/webm" });
           chunksRef.current = [];
-          debug.action("Recorder", "Recording band – blob parent ko bhej rahe hain", { blobSize: blob?.size });
-          onStop(blob);
+          debug.action("Recorder", "Recording band – blob bhej rahe hain", { blobSize: blob?.size });
+          onStopRef.current?.(blob);
+          onStoppedAndReadyRef.current?.(blob);
         };
-        debug.flow("Recorder – camera ready, video dikh raha hoga");
+
+        // Auto-start recording after short delay so user sees the question
+        const t = setTimeout(() => {
+          if (mediaRecorderRef.current?.state === "inactive") {
+            mediaRecorderRef.current.start();
+            setRecording(true);
+            debug.action("Recorder", "Auto-start recording");
+          }
+        }, 500);
+        timeoutId = t;
       } catch (err) {
         setError("Camera or microphone access denied.");
         debug.error("Recorder", "Camera/mic permission nahi mila", err);
@@ -35,87 +61,40 @@ export default function Recorder({ onStop }) {
     }
     initCamera();
     return () => {
-      if (stream) stream.getTracks().forEach((t) => t.stop());
-      debug.component("Recorder", "Unmount – camera tracks band");
+      if (timeoutId) clearTimeout(timeoutId);
+      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
     };
-  }, [onStop]);
-
-  const start = () => {
-    setError("");
-    if (mediaRecorderRef.current?.state === "inactive") {
-      mediaRecorderRef.current.start();
-      setRecording(true);
-      debug.action("Recorder", "Recording start – user bol raha hai");
-    }
-  };
-
-  const stop = () => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
-      setRecording(false);
-      debug.action("Recorder", "Recording stop – blob banega");
-    }
-  };
+    // Intentionally run only on mount: callbacks via refs so parent re-renders don't cleanup stream and fire onstop
+  }, []);
 
   return (
     <div>
-      <div
-        style={{
-          position: "relative",
-          borderRadius: "var(--radius-sm)",
-          overflow: "hidden",
-          background: "var(--bg)",
-          aspectRatio: "16/10",
-          maxWidth: "100%",
-        }}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative rounded-xl overflow-hidden bg-zinc-900 aspect-video max-w-full border border-zinc-800"
       >
         <video
           ref={videoRef}
           autoPlay
           muted
           playsInline
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transform: "scaleX(-1)",
-          }}
+          className="w-full h-full object-cover scale-x-[-1]"
         />
         {recording && (
-          <div
-            style={{
-              position: "absolute",
-              top: "0.5rem",
-              left: "0.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              background: "rgba(0,0,0,0.7)",
-              color: "var(--error)",
-              padding: "0.35rem 0.75rem",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "0.85rem",
-              fontWeight: 600,
-            }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute top-3 left-3 flex items-center gap-2 bg-black/70 text-red-400 px-3 py-1.5 rounded-lg text-sm font-semibold"
           >
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "currentColor", animation: "pulse 1s infinite" }} />
+            <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
             Recording
-          </div>
+          </motion.div>
         )}
-      </div>
-      {error && <p style={{ color: "var(--error)", fontSize: "0.9rem", margin: "0.5rem 0 0" }}>{error}</p>}
-      <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
-        {!recording ? (
-          <button type="button" className="btn btn-primary" onClick={start} disabled={!!error}>
-            Start recording
-          </button>
-        ) : (
-          <button type="button" className="btn btn-secondary" onClick={stop}>
-            Stop recording
-          </button>
-        )}
-      </div>
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+      </motion.div>
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   );
-}
+});
+
+export default Recorder;

@@ -113,6 +113,61 @@ async def get_next_question(
     }
 
 
+@router.post("/{interview_id}/questions/{question_id}/skip")
+async def skip_question(
+    interview_id: str,
+    question_id: str,
+    current_user=Depends(get_current_user)
+):
+    print("[Backend 🎤] Execution: Skip question – interview_id =", interview_id, "question_id =", question_id)
+    logger.info("Skipping question | interview_id=%s | question_id=%s", interview_id, question_id)
+
+    session = await db.interview_sessions.find_one({
+        "_id": ObjectId(interview_id),
+        "user_id": str(current_user["_id"])
+    })
+    if not session:
+        print("[Backend 🎤] Execution: Session nahi mila – 404!")
+        raise HTTPException(status_code=404, detail="Interview not found")
+
+    if session["status"] != "in_progress":
+        raise HTTPException(status_code=400, detail="Interview not in progress")
+
+    question = await db.interview_questions.find_one({
+        "_id": ObjectId(question_id),
+        "session_id": interview_id
+    })
+    if not question:
+        print("[Backend 🎤] Execution: Question nahi mila – 404!")
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    await db.interview_answers.insert_one({
+        "session_id": interview_id,
+        "question_id": question_id,
+        "status": "skipped",
+        "score": {
+            "accuracy": 0,
+            "communication": 0,
+            "behavior": 0
+        }
+    })
+    print("[Backend 🎤] Execution: Skipped answer record daal diya – ab index +1")
+
+    result = await db.interview_sessions.update_one(
+        {
+            "_id": ObjectId(interview_id),
+            "user_id": str(current_user["_id"]),
+            "status": "in_progress"
+        },
+        {"$inc": {"current_question_index": 1}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Unable to advance question")
+
+    print("[Backend 🎤] Execution: Skip complete – next question ready!")
+    return {"message": "Question skipped"}
+
+
 @router.post("/{interview_id}/answer-complete")
 async def mark_answer_complete(
     interview_id: str,

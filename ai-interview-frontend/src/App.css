@@ -1,4 +1,18 @@
-/* App-level overrides if needed */
 #root {
   min-height: 100vh;
+}
+
+/* Toast container – dark theme match */
+.Toastify__toast-container {
+  font-family: "Roboto", sans-serif;
+}
+
+.Toastify__toast--dark {
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #f4f4f5;
+}
+
+.Toastify__progress-bar {
+  background: #8b5cf6;
 }

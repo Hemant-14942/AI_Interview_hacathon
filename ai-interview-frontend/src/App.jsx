@@ -4,11 +4,13 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SetupInterview from "./pages/SetupInterview";
 import VoiceSelect from "./pages/VoiceSelect";
 import LiveInterview from "./pages/LiveInterview";
 import Result from "./pages/Result";
+import InterviewHistory from "./pages/InterviewHistory";
 import debug from "./utils/debug";
 
 function App() {
@@ -17,7 +19,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route
           path="/setup"
           element={
@@ -47,6 +50,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Result />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <InterviewHistory />
             </ProtectedRoute>
           }
         />

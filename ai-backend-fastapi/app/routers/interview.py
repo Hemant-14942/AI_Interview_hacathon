@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from bson import ObjectId
 from app.core.security import get_current_user
 from app.core.database import db
 from app.services.resume_parser import extract_text_from_resume
@@ -12,6 +13,46 @@ router = APIRouter(prefix="/interviews", tags=["Interviews"])
 
 UPLOAD_DIR = "uploads/resumes"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+async def _report_status_for_session(interview_id: str):
+    """Returns 'pending' if report not ready, 'completed' if report ready."""
+    questions = await db.interview_questions.find({"session_id": interview_id}).sort("order", 1).to_list(length=100)
+    answers = await db.interview_answers.find({"session_id": interview_id}).to_list(length=100)
+    if not questions and not answers:
+        return "pending"
+    answer_by_qid = {str(a["question_id"]): a for a in answers}
+    for q in questions:
+        qid = str(q["_id"])
+        ans = answer_by_qid.get(qid)
+        if ans is None:
+            continue
+        if ans.get("status") == "skipped":
+            continue
+        if not ans.get("score"):
+            return "pending"
+    return "completed"
+
+
+@router.get("")
+async def list_interviews(current_user=Depends(get_current_user)):
+    """List current user's interview sessions with report_status (pending/completed)."""
+    print("[Backend 🎤] Interview: List maang aaya – user_id =", current_user["_id"])
+    cursor = db.interview_sessions.find({"user_id": str(current_user["_id"])}).sort("_id", -1)
+    sessions = await cursor.to_list(length=100)
+    result = []
+    for s in sessions:
+        report_status = await _report_status_for_session(str(s["_id"]))
+        sid = str(s["_id"])
+        result.append({
+            "interview_id": sid,
+            "status": s.get("status", ""),
+            "report_status": report_status,
+            "label": f"Interview {sid[:8]}...",
+            "started_at": s.get("started_at").isoformat() if s.get("started_at") else None,
+        })
+    return {"interviews": result}
+
 
 @router.post("/create")
 async def create_interview(
