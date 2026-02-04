@@ -24,11 +24,12 @@ api.interceptors.response.use(
     return response;
   },
   (err) => {
-    debug.error("API", "Backend se error aaya", {
-      url: err.config?.url,
-      status: err.response?.status,
-      detail: err.response?.data,
-    });
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      return Promise.reject(err);
+    }
+    debug.error("API", "Backend se error aaya", { ...err.response?.data });
     return Promise.reject(err);
   }
 );

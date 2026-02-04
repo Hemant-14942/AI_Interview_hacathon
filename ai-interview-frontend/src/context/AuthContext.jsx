@@ -8,14 +8,28 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => !!localStorage.getItem("token"));
   const [userProfile, setUserProfile] = useState(null);
 
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    setUserProfile(null);
+    debug.action("AuthContext", "Logout – token hata diya");
+  };
+
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token){
+      return;
+    }
+    
     try {
       const res = await api.get("/auth/me");
       setUserProfile({ name: res.data.name, email: res.data.email });
-    } catch {
+    } catch (err) {
       setUserProfile(null);
+      if (err.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -35,12 +49,7 @@ export function AuthProvider({ children }) {
     fetchProfile();
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
-    setUserProfile(null);
-    debug.action("AuthContext", "Logout – token hata diya");
-  };
+
 
   return (
     <AuthContext.Provider value={{ user, userProfile, login, logout }}>

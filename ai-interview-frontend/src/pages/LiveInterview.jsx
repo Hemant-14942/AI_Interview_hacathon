@@ -13,7 +13,7 @@ export default function LiveInterview() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [question, setQuestion] = useState(null);
-  const [videoBlob, setVideoBlob] = useState(null);
+  const [, setVideoBlob] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [initialLoad, setInitialLoad] = useState(true);
@@ -252,7 +252,17 @@ export default function LiveInterview() {
 
         <motion.button
           type="button"
-          onClick={() => { toast.info("Interview yahi khatam kiya. Report dekho."); navigate(`/result/${id}`); }}
+          onClick={async () => {
+            try {
+              await api.post(`/interviews/${id}/end`);
+              toast.info("Interview yahi khatam kiya. Report dekho.");
+              navigate(`/result/${id}`);
+            } catch (err) {
+              const detail = err.response?.data?.detail;
+              toast.error(typeof detail === "string" ? detail : "Could not end interview. Try again.");
+              navigate(`/result/${id}`);
+            }
+          }}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
           className="w-full py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700/80 font-medium transition"
