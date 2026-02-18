@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
 
@@ -17,3 +17,12 @@ class InterviewQuestionInDB(BaseModel):
     question_text: str
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    kind: Literal["base", "followup"] = "base"
+
+    parent_question_id: Optional[str] = None
+
+    depth: int = 0
+
+    created_by: Literal["ai", "user"] = "ai"
+

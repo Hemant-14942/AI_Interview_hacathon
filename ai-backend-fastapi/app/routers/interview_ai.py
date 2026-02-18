@@ -62,7 +62,11 @@ async def setup_ai(
             await db.interview_questions.insert_one({
                 "session_id": interview_id,
                 "order": idx + 1,
-                "question_text": q
+                "question_text": q,
+                "kind": "base",
+                "parent_question_id": None,
+                "depth": 0,
+                "created_by": "ai"
             })
         print("[Backend 🎤] Interview AI: Saare questions DB mein save – count =", len(ai_result["questions"]))
 

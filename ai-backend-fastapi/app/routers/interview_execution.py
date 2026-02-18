@@ -229,3 +229,27 @@ async def end_interview(
     return {
         "message": "Interview ended successfully"
     }
+
+@router.get("/{interview_id}/questions/{question_id}/answer-status")
+async def answer_status(interview_id: str, question_id: str, current_user=Depends(get_current_user)):
+    session = await db.interview_sessions.find_one(
+        {"_id": ObjectId(interview_id), "user_id": str(current_user["_id"])}
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="Interview not found")
+
+    answer = await db.interview_answers.find_one({"session_id": interview_id, "question_id": question_id})
+    if not answer:
+        return {
+            "status": "missing",
+            "has_transcript": False,
+            "has_score": False,
+            "has_feedback": False,
+        }
+
+    return {
+        "status": answer.get("status", "unknown"),
+        "has_transcript": bool(answer.get("transcript")),
+        "has_score": bool(answer.get("score")),
+        "has_feedback": bool(answer.get("feedback")),
+    }

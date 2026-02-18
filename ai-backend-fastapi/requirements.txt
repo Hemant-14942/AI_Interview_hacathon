@@ -16,6 +16,9 @@ bcrypt==4.0.1
 # OpenAI (Azure)
 openai>=1.0.0
 
+# Google Gemini
+google-generativeai
+
 # TTS
 edge-tts>=6.1.0
 

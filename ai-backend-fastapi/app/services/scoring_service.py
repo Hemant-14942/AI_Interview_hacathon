@@ -1,15 +1,7 @@
-import json
-from openai import AzureOpenAI
-from app.core.config import settings
 from app.core.logger import get_logger
+from app.services.llm_json import generate_json
 
 logger = get_logger(__name__)
-
-client = AzureOpenAI(
-    azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-    api_key=settings.AZURE_OPENAI_KEY,
-    api_version=settings.AZURE_OPENAI_API_VERSION
-)
 
 
 def score_answer(question: str, transcript: str, emotion: str, confidence: str):
@@ -38,17 +30,11 @@ Score strictly (0-100) and return JSON ONLY:
 }}
 """
 
-    response = client.chat.completions.create(
-        model=settings.AZURE_OPENAI_DEPLOYMENT,
-        messages=[
-            {"role": "system", "content": "Return STRICT JSON only."},
-            {"role": "user", "content": prompt}
-        ],
+    result = generate_json(
+        system_prompt="Return STRICT JSON only.",
+        user_prompt=prompt,
         temperature=0.2,
-        response_format={"type": "json_object"}
     )
-
-    result = json.loads(response.choices[0].message.content)
     print("[Backend 🎤] ScoringService: GPT ne score de diya – accuracy, communication, behavior, feedback!")
     logger.info("Scoring completed")
 
