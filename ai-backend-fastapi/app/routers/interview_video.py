@@ -3,6 +3,8 @@ from bson import ObjectId
 import os
 import uuid
 from datetime import datetime
+import cloudinary
+import cloudinary.uploader
 
 from app.core.database import db
 from app.core.security import get_current_user
@@ -51,24 +53,25 @@ async def upload_video(
         raise HTTPException(status_code=404, detail="Question not found")
     print("[Backend 🎤] Video: Question bhi sahi – ab video file save karenge!")
 
-    # 3️⃣ Save video file
-    interview_dir = os.path.join(BASE_VIDEO_DIR, f"interview_{interview_id}")
-    os.makedirs(interview_dir, exist_ok=True)
+    # 3️⃣ Upload directly to Cloudinary
+    result = cloudinary.uploader.upload(
+        video.file,
+        resource_type="video",
+        folder=f"ai-interview/interviews/{interview_id}"
+    )
 
-    ext = video.filename.split(".")[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    file_path = os.path.join(interview_dir, filename)
+    video_url = result["secure_url"]
+    public_id = result["public_id"]
 
-    with open(file_path, "wb") as f:
-        f.write(await video.read())
-    print("[Backend 🎤] Video: File disk pe save ho gaya –", file_path)
-    logger.info("Video saved: %s", file_path)
+    print("[Backend 🎤] Video: File disk pe save ho gaya –", video_url)
+    logger.info("Video saved: %s", video_url)
 
     # 4️⃣ Create answer record
     await db.interview_answers.insert_one({
         "session_id": interview_id,
         "question_id": question_id,
-        "video_path": file_path,
+        "video_path": video_url,
+        "video_public_id": public_id,
         "status": "uploaded",
         "created_at": datetime.utcnow()
     })
@@ -79,7 +82,7 @@ async def upload_video(
         process_answer_pipeline,
         interview_id,
         question_id,
-        file_path
+        video_url,
     )
     print("[Backend 🎤] Video: Background pipeline queue mein daal diya – transcript + emotion + score hoga!")
     print("[Backend 🎤] Video: Report tab milega jab ye pipeline complete ho jayega – terminal mein BackgroundJob prints dekh lo!")

@@ -2,6 +2,9 @@ import edge_tts
 import uuid
 import os
 import asyncio
+import cloudinary
+import cloudinary.uploader
+
 
 from app.core.logger import get_logger
 
@@ -30,7 +33,20 @@ async def generate_tts(text: str, voice: str) -> str:
         await communicate.save(file_path)
         print("[Backend 🎤] TTSService: MP3 save ho gaya –", file_path)
         logger.info("TTS generated: %s", file_path)
-        return file_path
+
+        # saving in cloudinary 
+        result = cloudinary.uploader.upload(
+            file_path,
+            resource_type="video",
+            folder="ai-interview/tts",
+            )
+        print("[Backend 🎤] TTSService: Cloudinary upload ho gaya –", result)
+        os.remove(file_path)  # local file delete kar do, ab cloud mein safe hai
+        return {
+                "audio_url": result["secure_url"],
+                "public_id": result["public_id"]
+            }
+
     except Exception:
         print("[Backend 🎤] TTSService: TTS fail – edge_tts ne reject kiya!")
         logger.exception("TTS generation failed")

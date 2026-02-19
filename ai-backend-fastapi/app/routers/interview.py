@@ -71,23 +71,54 @@ async def create_interview(
         print("[Backend 🎤] Interview: Resume file save kar rahe hain –", file_path)
         logger.info("Saving resume file: %s", file_path)
 
+        allowed_ext = ["pdf", "docx"]
+        if file_ext not in allowed_ext:
+            print("[Backend 🎤] Interview: Resume format galat – sirf PDF/DOCX chahiye!")
+            logger.warning("Unsupported resume format: %s", resume.filename)
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported resume format. Only PDF and DOCX are allowed."
+            )
+       
+        # Resume file ko disk pe save kar lo, taaki parser wahan se read kar sake
         with open(file_path, "wb") as f:
             f.write(await resume.read())
         print("[Backend 🎤] Interview: File disk pe aa gaya – ab text nikaalenge!")
 
         logger.info("Extracting resume text")
+        # extract text from resume and upload to Cloudinary
         extracted_text = extract_text_from_resume(file_path)
-
+      
         if not extracted_text.strip():
-            print("[Backend 🎤] Interview: Arre resume se text nahi nikla – empty!")
-            logger.warning("Resume text extraction returned empty text")
+            os.remove(file_path)
+            raise HTTPException(
+                status_code=400,
+                detail="Resume text extraction failed or resume is empty"
+            )
+
+        try:
+        # 3️⃣ Upload to Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                file_path,
+                resource_type="raw",
+                folder="ai-interview/resumes",
+            )
+            resume_url = upload_result["secure_url"]
+            public_id = upload_result["public_id"]
+            print("[Backend 🎤] Interview: Resume Cloudinary pe upload ho gaya –", resume_url)
+        finally:
+        # 4️⃣ Clean up local file
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print("[Backend 🎤] Interview: Local resume file delete kar diya –", file_path)
 
         session = {
             "user_id": str(current_user["_id"]),
             "status": "created",
             "resume": {
                 "original_name": resume.filename,
-                "file_path": file_path,
+                "file_path": resume_url,
+                "public_id": public_id,
                 "extracted_text": extracted_text
             },
             "job_description": job_description,

@@ -2,6 +2,10 @@ from datetime import datetime
 
 from bson import ObjectId
 
+import requests
+import os
+
+
 from app.core.database_sync import get_sync_db
 from app.core.logger import get_logger
 from app.services.ai_service import generate_followup_question
@@ -30,7 +34,7 @@ def _should_attempt_followup(transcript: str, score: dict) -> bool:
     return False
 
 
-def process_answer_pipeline(interview_id: str, question_id: str, video_path: str):
+def process_answer_pipeline(interview_id: str, question_id: str, video_url: str):
     """
     FULL BACKGROUND PIPELINE
     video -> audio -> transcript -> emotion -> scoring -> (optional follow-up insert)
@@ -47,19 +51,32 @@ def process_answer_pipeline(interview_id: str, question_id: str, video_path: str
         {"$set": {"status": "processing", "processing_started_at": datetime.utcnow()}},
     )
 
+    # 🔽 Step 0: Download video from Cloudinary temporarily
+    temp_video_path = f"uploads/temp_{question_id}.mp4"
+
+    try:
+        response = requests.get(video_url)
+        with open(temp_video_path, "wb") as f:
+            f.write(response.content)
+    except Exception as e:
+        raise Exception(f"Failed to download video from Cloudinary: {str(e)}")
+    
     try:
         # 1️⃣ Extract audio
         audio_path = f"uploads/audio/{question_id}.wav"
         print("[Backend 🎤] BackgroundJob: Step 1 – video se audio nikal rahe hain!")
-        extract_audio(video_path, audio_path)
+        extract_audio(temp_video_path, audio_path)
 
         # 2️⃣ Transcribe audio
         print("[Backend 🎤] BackgroundJob: Step 2 – Whisper se transcript!")
         transcript = transcribe_audio(audio_path)
 
+        if os.path.exists(audio_path):
+            os.remove(audio_path)  # clean up audio file
+
         # 3️⃣ Emotion analysis
         print("[Backend 🎤] BackgroundJob: Step 3 – DeepFace se emotion!")
-        emotion, confidence = analyze_emotion(video_path)
+        emotion, confidence = analyze_emotion(temp_video_path)
 
         # 4️⃣ Fetch question
         question = db.interview_questions.find_one({"_id": ObjectId(question_id)})
@@ -182,6 +199,11 @@ def process_answer_pipeline(interview_id: str, question_id: str, video_path: str
             {"session_id": interview_id, "question_id": question_id},
             {"$set": {"status": "completed", "completed_at": datetime.utcnow()}},
         )
+
+        # 🧹 Clean up temporary file
+        if os.path.exists(temp_video_path):
+            os.remove(temp_video_path)
+
 
         print("[Backend 🎤] BackgroundJob: Pipeline complete! 🎉")
         logger.info("BG JOB COMPLETED | interview=%s | question=%s", interview_id, question_id)

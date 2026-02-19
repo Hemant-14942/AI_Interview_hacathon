@@ -34,3 +34,6 @@ deepface>=0.0.79
 
 # Optional
 python-dotenv>=1.0.0
+
+# Cloudinary (for image uploads)
+cloudinary>=1.37.0

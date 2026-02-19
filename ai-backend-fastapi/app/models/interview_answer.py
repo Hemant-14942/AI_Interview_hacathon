@@ -14,6 +14,7 @@ class InterviewAnswerInDB(BaseModel):
     question_id: str
 
     video_path: Optional[str] = None
+    video_public_id: Optional[str] = None  # Cloudinary public_id for video deletion
 
     transcript: Optional[str] = None
 

@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     AZURE_OPENAI_DEPLOYMENT: Optional[str] = None
     AZURE_OPENAI_API_VERSION: Optional[str] = None
 
+    CLOUDINARY_CLOUD_NAME: Optional[str] = None
+    CLOUDINARY_API_KEY: Optional[str] = None
+    CLOUDINARY_API_SECRET: Optional[str] = None
+
     class Config:
         env_file = ".env"
 

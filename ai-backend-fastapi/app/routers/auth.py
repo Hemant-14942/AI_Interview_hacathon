@@ -20,7 +20,7 @@ async def register(user: UserCreate):
         "name": user.name,
         "email": user.email,
         "hashed_password": hash_password(user.password),
-        "role": "candidate"
+        "role": user.role.value if hasattr(user, "role") else "candidate"  # Default role set to candidate
     }
 
     result = await db.users.insert_one(user_data)

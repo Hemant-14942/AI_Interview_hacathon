@@ -24,13 +24,14 @@ async def generate_voice(
     logger.info("TTS request received")
 
     try:
-        audio_path = await generate_tts(
+        result = await generate_tts(
             payload.text,
             payload.voice
         )
-        print("[Backend 🎤] TTS: Audio file ban gaya –", audio_path, "– frontend ko path bhej rahe hain!")
+        print("[Backend 🎤] TTS: Audio file ban gaya –", result, "– frontend ko path bhej rahe hain!")
         return {
-            "audio_path": audio_path
+            "audio_url": result["audio_url"],
+            "public_id": result["public_id"]
         }
     except Exception:
         print("[Backend 🎤] TTS: TTS fail – kuch toot gaya!")

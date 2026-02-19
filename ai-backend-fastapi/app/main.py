@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from app.core.config import settings
+from app.core import cloudinary_config  # Ensure Cloudinary is configured at startup
 from app.routers.auth import router as auth_router
 from app.routers.interview import router as interview_router
 from app.routers.interview_ai import router as interview_ai_router
