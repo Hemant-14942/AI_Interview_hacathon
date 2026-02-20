@@ -7,6 +7,10 @@ from app.core.logger import get_logger
 import os
 import uuid
 
+import cloudinary
+import cloudinary.uploader
+
+
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/interviews", tags=["Interviews"])
@@ -87,14 +91,23 @@ async def create_interview(
 
         logger.info("Extracting resume text")
         # extract text from resume and upload to Cloudinary
-        extracted_text = extract_text_from_resume(file_path)
+        try:
+            extracted_text = extract_text_from_resume(file_path)
+        except Exception as e:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to extract text from resume: {str(e)}"
+                )
       
         if not extracted_text.strip():
-            os.remove(file_path)
-            raise HTTPException(
-                status_code=400,
-                detail="Resume text extraction failed or resume is empty"
-            )
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                raise HTTPException(
+                    status_code=400,
+                    detail="Resume text extraction failed or resume is empty"
+                )
 
         try:
         # 3️⃣ Upload to Cloudinary
