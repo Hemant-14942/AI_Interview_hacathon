@@ -91,3 +91,17 @@ async def get_current_user(
 
     print("[Backend 🎤] Security: User mil gaya –", user.get("email"), "– request allowed!")
     return user
+
+# ======================
+# ROLE CHECK
+# ======================
+async def required_role(required_role: str, current_user = Depends(get_current_user)):
+    print(f"[Backend 🎤] Auth: Role check – required: {required_role}, user role: {current_user.get('role')}")
+    if current_user["role"] != required_role:
+        print("[Backend 🎤] Auth: Role mismatch – access denied!")
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission to access this resource"
+        )
+    print("[Backend 🎤] Auth: Role match – access granted!")
+    return current_user

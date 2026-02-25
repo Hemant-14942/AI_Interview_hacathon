@@ -14,6 +14,7 @@ from app.routers.interview_analysis import router as interview_analysis_router
 from app.routers.interview_scoring import router as interview_scoring_router
 from app.routers.tts import router as tts_router
 from app.routers.interview_report import router as interview_report_router
+from app.routers.recruiter.jobs import router as jobs_router
 
 
 app = FastAPI(title=settings.APP_NAME)
@@ -50,6 +51,7 @@ app.include_router(interview_analysis_router)
 app.include_router(interview_scoring_router)
 app.include_router(tts_router)
 app.include_router(interview_report_router)
+app.include_router(jobs_router)
 
 
 @app.on_event("startup")
