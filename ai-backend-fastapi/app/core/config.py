@@ -3,6 +3,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     APP_NAME: str
+    IS_PRODUCTION: bool = False
     DEBUG: bool = False
 
     JWT_SECRET: str
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "azure"
 
     # Provider fallback order. Example: "groq,gemini,azure"
-    AI_PROVIDER_ORDER: str = "groq,gemini,azure"
+    AI_PROVIDER_ORDER: Optional[str] = None
 
     GEMINI_API_KEY: Optional[str] = None
     # NOTE: Gemini 1.5 model names are deprecated/removed for many keys.
