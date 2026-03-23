@@ -66,15 +66,17 @@ async def upload_video(
     print("[Backend 🎤] Video: File disk pe save ho gaya –", video_url)
     logger.info("Video saved: %s", video_url)
 
-    # 4️⃣ Create answer record
-    await db.interview_answers.insert_one({
-        "session_id": interview_id,
-        "question_id": question_id,
-        "video_path": video_url,
-        "video_public_id": public_id,
-        "status": "uploaded",
-        "created_at": datetime.utcnow()
-    })
+    # 4️⃣ Create/update answer record (idempotent for retries)
+    await db.interview_answers.update_one(
+        {"session_id": interview_id, "question_id": question_id},
+        {"$set": {
+            "video_path": video_url,
+            "video_public_id": public_id,
+            "status": "uploaded",
+            "created_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
     print("[Backend 🎤] Video: Answer record DB mein daal diya – status = uploaded")
 
     # 5️⃣ 🔥 BACKGROUND TASK

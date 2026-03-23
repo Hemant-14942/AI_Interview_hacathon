@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from typing import Optional
 from enum import Enum
 from datetime import datetime
-from pydantic import Field
+
 
 class Mode(str, Enum):
     remote = "remote"
@@ -14,6 +14,8 @@ class JobCreate(BaseModel):
     description: str
     location: str
     salary: int
+    experience: int
+    skills: list[str]
     mode: Mode
 
 class JobResponse(JobCreate):

@@ -3,6 +3,7 @@ from app.core.database import db
 from app.models.create_jobs import CreateJobResponse, JobCreate, JobInDB, JobResponse
 from app.core.security import get_current_user, required_role
 from bson import ObjectId
+from bson.errors import InvalidId
 from datetime import datetime, timezone
 
 
@@ -36,6 +37,8 @@ async def create_job(job: JobCreate,current_user: str = Depends(get_current_user
                 description=job_data.description,
                 location=job_data.location,
                 salary=job_data.salary,
+                experience=job_data.experience,
+                skills=job_data.skills,
                 mode=job_data.mode
             )
         )
@@ -79,6 +82,8 @@ async def get_jobs( current_user: str = Depends(get_current_user)):
                 "description": job["description"],
                 "location": job["location"],
                 "salary": job["salary"],
+                "experience": job.get("experience", 0),
+                "skills": job.get("skills", []),
                 "mode": job["mode"],
             }
             formatted_jobs.append(new_job)
@@ -93,8 +98,28 @@ async def get_job(job_id: str, current_user: str = Depends(get_current_user)):
 
     print("[Backend 🎤] Recruiter: Get job endpoint hit – getting job from DB")
     try:
+        if not ObjectId.is_valid(job_id):
+            raise HTTPException(status_code=400, detail="Invalid job id")
+
         job = await db.jobs.find_one({"_id": ObjectId(job_id)})
-        return {"message": "Job fetched successfully", "data": job}
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        formatted_job = {
+            "id": str(job["_id"]),
+            "title": job["title"],
+            "description": job["description"],
+            "location": job["location"],
+            "salary": job["salary"],
+            "experience": job.get("experience", 0),
+            "skills": job.get("skills", []),
+            "mode": job["mode"],
+        }
+        return {"message": "Job fetched successfully", "data": formatted_job}
+    except HTTPException:
+        raise
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid job id")
     except Exception as e:
         print("[Backend 🎤] Recruiter: Error fetching job –", str(e))
         raise HTTPException(status_code=500, detail="Internal Server Error")
