@@ -4,8 +4,8 @@ import React, { useState, KeyboardEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { createJob } from "@/app/lib/jobs";
-import type { Mode, JobCreateRequest } from "@/app/types/jobs";
+import { createJob } from "@/lib/jobs";
+import type { Mode, JobCreateRequest } from "@/types/jobs";
 
 type JobFormState = {
   title: string;
@@ -371,11 +371,11 @@ const CreateJobsPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:-translate-y-px hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="btn-primary h-10 w-full gap-2 rounded-2xl px-4 text-xs shadow-lg shadow-primary/30 transition hover:-translate-y-px"
                   >
                     {loading ? (
                       <>
-                        <span className="h-3 w-3 animate-spin rounded-full border border-slate-900/20 border-t-slate-900" />
+                        <span className="h-3 w-3 animate-spin rounded-full border border-bg/25 border-t-bg" />
                         Creating role…
                       </>
                     ) : (

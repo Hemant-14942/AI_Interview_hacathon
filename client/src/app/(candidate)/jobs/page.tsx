@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { getJobs } from "@/app/lib/jobs";
-import type { Job } from "@/app/types/jobs";
+import { getJobs } from "@/lib/jobs";
+import type { Job } from "@/types/jobs";
 
 const JobsPage = () => {
   const router = useRouter();
@@ -79,7 +79,7 @@ const JobsPage = () => {
             </p>
             <Link
               href="/profile"
-              className="inline-flex h-9 items-center justify-center rounded-2xl bg-white px-4 text-[11px] font-semibold text-slate-950 shadow-md shadow-emerald-500/20 hover:bg-slate-100"
+              className="btn-primary h-9 rounded-2xl px-4 text-[11px] shadow-md shadow-primary/30 transition hover:-translate-y-px"
             >
               View profile &amp; history
             </Link>

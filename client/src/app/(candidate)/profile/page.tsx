@@ -4,9 +4,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { getMe } from "@/app/lib/auth";
-import { listInterviews, type InterviewListItem } from "@/app/lib/interviews";
-import type { User } from "@/app/types/auth";
+import { getMe } from "@/lib/auth";
+import { listInterviews, type InterviewListItem } from "@/lib/interviews";
+import type { User } from "@/types/auth";
 
 interface ProfileStats {
   totalInterviews: number;
@@ -111,7 +111,7 @@ const ProfilePage = () => {
           <div className="flex flex-col items-end gap-2 text-xs text-slate-300">
             <Link
               href="/jobs"
-              className="inline-flex h-9 items-center justify-center rounded-2xl bg-white px-4 text-[11px] font-semibold text-slate-950 shadow-md shadow-emerald-500/20 hover:bg-slate-100"
+              className="btn-primary h-9 rounded-2xl px-4 text-[11px] shadow-md shadow-primary/30 transition hover:-translate-y-px"
             >
               Browse jobs
             </Link>
@@ -206,7 +206,7 @@ const ProfilePage = () => {
                             </p>
                             {item.started_at && (
                               <p className="text-[11px] text-slate-500">
-                                {new Date(item.started_at).toLocaleString()}
+                                {new Date(item.started_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
                               </p>
                             )}
                           </div>

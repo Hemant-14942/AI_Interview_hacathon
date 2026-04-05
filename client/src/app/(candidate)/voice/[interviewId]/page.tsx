@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { startInterview, type VoiceOption } from "@/app/lib/interviews";
+import { startInterview, type VoiceOption } from "@/lib/interviews";
 
 type PageParams = {
   interviewId: string;

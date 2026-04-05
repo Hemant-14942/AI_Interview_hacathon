@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { register } from "@/app/lib/auth";
-import { Role, RegisterRequest, RecruiterInfo } from "@/app/types/auth";
+import { register } from "@/lib/auth";
+import { Role, RegisterRequest, RecruiterInfo } from "@/types/auth";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
 
@@ -81,7 +81,7 @@ const RegisterPage = () => {
               Create your account
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-              Start practicing with InterviewAI.
+              Start practicing with Intervo.
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
               Candidate ho to mock interview + feedback. Recruiter ho to sessions
@@ -231,7 +231,7 @@ const RegisterPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="btn-primary mt-2 h-11 w-full px-5"
                 >
                   {loading ? "Creating..." : "Create account"}
                 </button>

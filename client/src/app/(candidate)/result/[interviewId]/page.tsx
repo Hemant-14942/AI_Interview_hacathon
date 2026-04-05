@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { getInterviewReport, type InterviewReport } from "@/app/lib/interviews";
+import { getInterviewReport, type InterviewReport } from "@/lib/interviews";
 
 type PageParams = {
   interviewId: string;
@@ -137,7 +137,7 @@ const ResultPage = () => {
             </Link>
             <Link
               href="/profile"
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-slate-100"
+              className="btn-primary rounded-xl px-4 py-2 text-sm"
             >
               View profile history
             </Link>

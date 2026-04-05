@@ -11,7 +11,7 @@ import {
   skipQuestion,
   uploadAnswerVideo,
   type NextQuestionResponse,
-} from "@/app/lib/interviews";
+} from "@/lib/interviews";
 
 type PageParams = {
   interviewId: string;
@@ -331,7 +331,7 @@ const LiveInterviewPage = () => {
               type="button"
               disabled={submitting}
               onClick={submitCurrentAnswer}
-              className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-300 disabled:opacity-70"
+              className="btn-primary rounded-xl px-4 py-2 text-sm disabled:opacity-70"
             >
               {submitting ? loadingText || "Processing..." : "Next"}
             </button>

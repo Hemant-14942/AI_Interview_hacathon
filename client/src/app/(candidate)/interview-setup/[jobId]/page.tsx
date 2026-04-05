@@ -4,9 +4,9 @@ import React, { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { getJobById } from "@/app/lib/jobs";
-import { createInterview, setupInterviewAI } from "@/app/lib/interviews";
-import type { Job } from "@/app/types/jobs";
+import { getJobById } from "@/lib/jobs";
+import { createInterview, setupInterviewAI } from "@/lib/interviews";
+import type { Job } from "@/types/jobs";
 
 type PageParams = {
   jobId: string;
@@ -253,11 +253,11 @@ const InterviewSetupPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:-translate-y-px hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="btn-primary mt-2 h-10 w-full gap-2 rounded-2xl px-4 text-xs shadow-lg shadow-primary/30 transition hover:-translate-y-px"
                 >
                   {loading ? (
                     <>
-                      <span className="h-3 w-3 animate-spin rounded-full border border-slate-900/20 border-t-slate-900" />
+                      <span className="h-3 w-3 animate-spin rounded-full border border-bg/25 border-t-bg" />
                       Setting up interview…
                     </>
                   ) : (

@@ -2,35 +2,37 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { getMe, login } from "@/app/lib/auth"
+import { getMe, login } from "@/lib/auth"
 import { toast } from "sonner"
 import Image from "next/image"
 import Link from "next/link"
 import { Navbar } from "@/components/Navbar"
 import { Container } from "@/components/Container"
-import type { LoginRequest } from "@/app/types/auth"
+import type { LoginRequest } from "@/types/auth"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { loginUser } from "@/store/slices/authSlice"
+
 export default function LoginPage() {
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const [loginRequest, setLoginRequest] = useState<LoginRequest>({
     email: "",
     password: "",
   })
   const [showPassword, setShowPassword] = useState(false)
+  const {user , status, error} = useAppSelector((state) => state.auth)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      await login(loginRequest)
-      const { data: user, message } = await getMe()
-      if (user.role === "candidate") {
-        router.push("/jobs")
-      } else {
-        router.push("/dashboard")
+      await dispatch(loginUser(loginRequest))
+      if(status === "succeeded"){
+        toast.success("Login successful")
+        router.push("/")
       }
-      toast.success(message)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error)
-      toast.error("Login failed")
+      toast.error((error as Error).message)
     }
   }
 
@@ -46,7 +48,7 @@ export default function LoginPage() {
               Welcome back
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-              Continue your interview prep.
+              Continue your interview prep on Intervo.
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
               Hinglish-friendly UI, clean theme, and role-based navigation after login.
@@ -114,7 +116,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="btn-primary mt-2 h-11 w-full px-5"
                 >
                   Login
                 </button>

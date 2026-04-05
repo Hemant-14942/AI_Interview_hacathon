@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { getJobs } from "@/app/lib/jobs";
-import type { Job } from "@/app/types/jobs";
+import { getJobs } from "@/lib/jobs";
+import type { Job } from "@/types/jobs";
 
 const DashboardPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -85,9 +85,9 @@ const DashboardPage = () => {
 
             <Link
               href="/create-jobs"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:-translate-y-px hover:bg-slate-100"
+              className="btn-primary h-10 gap-2 rounded-2xl px-4 text-xs shadow-lg shadow-primary/30 transition hover:-translate-y-px"
             >
-              <span className="h-4 w-4 rounded-full bg-slate-900 text-center text-[11px] font-bold text-emerald-300">
+              <span className="h-4 w-4 rounded-full bg-bg text-center text-[11px] font-bold text-primary">
                 +
               </span>
               Post new role

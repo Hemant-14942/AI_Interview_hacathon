@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
+import { HeroLottie } from "@/components/HeroLottie";
 
 export default function Home() {
   return (
@@ -17,7 +17,7 @@ export default function Home() {
           <Container className="relative grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-24">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
-                AI mock interviews • instant feedback • role-based flows
+                AI mock interviews • instant feedback
               </p>
 
               <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -28,15 +28,11 @@ export default function Home() {
                 that feels real.
               </h1>
 
-              <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
-                Candidate ho ya recruiter — same clean experience. Candidates get guided
-                mock rounds + feedback. Recruiters manage sessions and evaluate faster.
-              </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="btn-primary h-11 px-5"
                 >
                   Get started
                 </Link>
@@ -65,7 +61,7 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-fuchsia-500/15 blur-2xl" />
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-green-500/15 via-lime-500/10 to-green-500/15 blur-2xl" />
               <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5">
                 <div className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-3 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                   <span>Mock interview • Live</span>
@@ -75,14 +71,7 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="p-4">
-                  <Image
-                    src="/illustrations/hero.svg"
-                    alt="Interview AI product preview"
-                    width={1200}
-                    height={800}
-                    className="h-auto w-full"
-                    priority
-                  />
+                  <HeroLottie />
                 </div>
               </div>
             </div>
@@ -175,7 +164,7 @@ export default function Home() {
                 </div>
                 <Link
                   href="/register"
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="btn-primary h-11 px-5"
                 >
                   Create account
                 </Link>
@@ -187,7 +176,7 @@ export default function Home() {
 
       <footer className="border-t border-slate-200 py-10 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
         <Container className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} InterviewAI. Built for your hackathon.</p>
+          <p>© {new Date().getFullYear()} Intervo. Built for your hackathon.</p>
           <div className="flex gap-4">
             <Link href="/#features" className="hover:text-slate-900 dark:hover:text-white">
               Features

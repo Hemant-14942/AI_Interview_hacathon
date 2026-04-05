@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Container } from "@/components/Container";
-import { getInterviewReport } from "@/app/lib/interviews";
-import type { InterviewReport } from "@/app/lib/interviews";
+import { getInterviewReport } from "@/lib/interviews";
+import type { InterviewReport } from "@/lib/interviews";
 
 type PageParams = {
   interviewId: string;
