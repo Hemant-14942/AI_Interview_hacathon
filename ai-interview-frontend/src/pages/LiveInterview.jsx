@@ -27,29 +27,68 @@ export default function LiveInterview() {
   const recorderRef = useRef(null);
   const handledStoppedRef = useRef(null);
   const isProcessingRef = useRef(false);
+  const speechUtteranceRef = useRef(null);
 
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   debug.component("LiveInterview", "Screen load", { interviewId: id });
 
-  const stopTts = () => {
+  const goHomeWithProcessingMessage = useCallback(() => {
+    toast.info("Interview finished. Result will update soon in the background.");
+    navigate("/", {
+      state: {
+        interviewFinished: true,
+        interviewId: id,
+      },
+    });
+  }, [id, navigate]);
+
+  const stopTts = useCallback(() => {
     const a = audioRef.current;
-    if (!a) return;
     try {
-      a.pause();
-      a.currentTime = 0;
+      if (a) {
+        a.pause();
+        a.currentTime = 0;
+        a.removeAttribute("src");
+        a.load();
+      }
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
     } catch {
       // ignore
+    } finally {
+      speechUtteranceRef.current = null;
+      setIsSpeaking(false);
     }
-  };
+  }, []);
+
+  const speakWithBrowserTts = useCallback((text) => {
+    if (!("speechSynthesis" in window) || !text) return false;
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      speechUtteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+      return true;
+    } catch {
+      setIsSpeaking(false);
+      return false;
+    }
+  }, []);
 
   const loadQuestion = useCallback(async () => {
     setError("");
     try {
       const res = await api.get(`/interviews/${id}/next-question`);
       if (res.data.message === "Interview completed") {
-        toast.success("Interview khatam! Ab report dekho.");
-        navigate(`/result/${id}`);
+        goHomeWithProcessingMessage();
         return;
       }
       setQuestion(res.data);
@@ -61,11 +100,13 @@ export default function LiveInterview() {
     } finally {
       setInitialLoad(false);
     }
-  }, [id, navigate]);
+  }, [goHomeWithProcessingMessage, id]);
 
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
+
+  useEffect(() => () => stopTts(), [stopTts]);
 
   // Reset handled-stopped ref only when a new question is set
   useEffect(() => {
@@ -120,52 +161,37 @@ export default function LiveInterview() {
     let cancelled = false;
 
     const playTts = async () => {
+      stopTts();
       try {
         const { data } = await api.post("/tts/generate", {
           text: question.question_text,
           voice: question.voice,
         });
-        const url = data.audio_path.startsWith("http")
-          ? data.audio_path
-          : `${BASE_URL}/${data.audio_path}`;
+        const rawUrl = data.audio_url || data.audio_path;
+        if (!rawUrl) return;
+        const url = rawUrl.startsWith("http") ? rawUrl : `${BASE_URL}/${rawUrl}`;
 
         if (audioRef.current && !cancelled) {
           audioRef.current.src = url;
+          audioRef.current.muted = false;
+          audioRef.current.volume = 1;
+          audioRef.current.currentTime = 0;
+          audioRef.current.load();
           await audioRef.current.play();
         }
       } catch {
-        // TTS optional
+        if (!cancelled) {
+          speakWithBrowserTts(question.question_text);
+        }
       }
     };
 
     playTts();
     return () => {
       cancelled = true;
+      stopTts();
     };
-  }, [question?.question_text, question?.voice, countdown]);
-
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  const waitForAnswerCompleted = async (
-    interviewId,
-    questionId,
-    { timeoutMs = 120000, intervalMs = 1500 } = {},
-  ) => {
-    const start = Date.now();
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      if (Date.now() - start > timeoutMs) {
-        throw new Error("Processing timeout. Please try again.");
-      }
-      const res = await api.get(
-        `/interviews/${interviewId}/questions/${questionId}/answer-status`,
-      );
-      const status = res.data?.status;
-      if (status === "completed") return res.data;
-      if (status === "failed") throw new Error("Processing failed. Please re-upload.");
-      await sleep(intervalMs);
-    }
-  };
+  }, [countdown, question?.question_text, question?.voice, speakWithBrowserTts, stopTts]);
 
   const handleStoppedAndReady = async (blob) => {
     if (isProcessingRef.current) return;
@@ -176,8 +202,7 @@ export default function LiveInterview() {
 
     setError("");
     setLoading(true);
-    setLoadingText("Uploading your answer...");
-    toast.info("Uploading your answer...");
+    setLoadingText("Saving your answer...");
 
     try {
       if (blob && blob.size > 0) {
@@ -189,16 +214,13 @@ export default function LiveInterview() {
           formData,
           { headers: { "Content-Type": "multipart/form-data" } },
         );
-
-        setLoadingText("Analyzing your answer...");
-        toast.info("Analyzing your answer...");
-        await waitForAnswerCompleted(id, question.question_id);
       }
 
       setLoadingText("Loading next question...");
       await api.post(`/interviews/${id}/answer-complete`);
-      if (blob && blob.size > 0) toast.success("Answer saved. Loading next question.");
-      else toast.success("Loading next question.");
+      if (blob && blob.size > 0) {
+        toast.success("Answer saved. Background analysis is running.");
+      }
       await loadQuestion();
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -438,12 +460,11 @@ export default function LiveInterview() {
             stopTts();
             try {
               await api.post(`/interviews/${id}/end`);
-              toast.info("Interview yahi khatam kiya. Report dekho.");
-              navigate(`/result/${id}`);
+              goHomeWithProcessingMessage();
             } catch (err) {
               const detail = err.response?.data?.detail;
               toast.error(typeof detail === "string" ? detail : "Could not end interview. Try again.");
-              navigate(`/result/${id}`);
+              goHomeWithProcessingMessage();
             }
           }}
           whileHover={{ scale: 1.01 }}
@@ -454,7 +475,7 @@ export default function LiveInterview() {
         </motion.button>
       </motion.div>
 
-      <audio ref={audioRef} className="hidden" />
+      <audio ref={audioRef} className="hidden" preload="auto" crossOrigin="anonymous" />
     </div>
   );
 }

@@ -1,16 +1,27 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">
       <Navbar />
 
       <main className="flex-1">
+        {location.state?.interviewFinished && (
+          <section className="border-b border-zinc-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+              <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-sm text-violet-100">
+                Interview submitted. Result will update soon while the backend finishes processing.
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Hero / Landing */}
         <section className="relative overflow-hidden border-b border-zinc-800">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">

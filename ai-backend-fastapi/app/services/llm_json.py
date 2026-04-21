@@ -156,6 +156,8 @@ def generate_json(system_prompt: str, user_prompt: str, temperature: float = 0.2
     elif preferred and preferred not in order:
         order = [preferred] + order
 
+    print(f"[LLM] generate_json — try order: {', '.join(order)}", flush=True)
+
     def try_provider(p: str) -> Dict[str, Any]:
         if p == "groq":
             return _call_groq_json(system_prompt, user_prompt, temperature)
@@ -168,9 +170,13 @@ def generate_json(system_prompt: str, user_prompt: str, temperature: float = 0.2
     last_err: Optional[Exception] = None
     for p in order:
         try:
-            return try_provider(p)
+            print(f"[LLM] calling provider: {p}", flush=True)
+            result = try_provider(p)
+            print(f"[LLM] success — response from: {p}", flush=True)
+            return result
         except Exception as e:
             last_err = e
+            print(f"[LLM] provider failed: {p} — {e!s}", flush=True)
             logger.exception("LLM provider failed: %s", p)
             continue
 
